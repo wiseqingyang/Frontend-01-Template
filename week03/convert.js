@@ -1,4 +1,28 @@
 const strArr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const numberObj = {
+    '0': 0,
+    '1': 1,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    '5': 5,
+    '6': 6,
+    '7': 7,
+    '8': 8,
+    '9': 9,
+    'a': 10,
+    'A': 10,
+    'b': 11,
+    'B': 11,
+    'c': 12,
+    'C': 12,
+    'd': 13,
+    'D': 13,
+    'e': 14,
+    'E': 14,
+    'f': 15,
+    'F': 15,
+}
 
 function convertNumberToString(number, x = 10) {
 
@@ -71,12 +95,11 @@ function convertNumberToString(number, x = 10) {
         }
     }
 }
-var a = convertStringToNumber('132456')
-console.log(a, typeof a)
+
 
 function convertStringToNumber(string, x = 10) {
     string = string.trim();
-    if(string.length == 0) return 0;
+    if (string.length == 0) return 0;
     const reg1 = /^0([Bb][01]+|[Oo][0-7]+|[Xx][0-9a-fA-F]+)$/
     const reg2 = /^[+-]?Infinity$/
     const reg3 = /^[+-]?((0|[1-9]\d*)[.](\d+)?|[.]\d+|(0|[1-9]\d*))([Ee][+-]?\d+)?$/;
@@ -85,21 +108,48 @@ function convertStringToNumber(string, x = 10) {
     }
     let index = string.indexOf('e');
     index = index == -1 ? string.indexOf('E') : index;
-    if (index != -1);
-    let ex = string.substring(index + 1, string.length);
+    let eString = '';
+    if (index != -1) {
+        eString = string.substring(index + 1, string.length);
+        string = string.slice(0, index);
+    }
     let i = 0;
     let number = 0;
-    while(string[i] != '.' && i < string.length) {
-        number *= 10;
-        number += string[i] - '0';
+    let digit = 10;
+    if (/^0[Bb]/.test(string)) {
+        digit = 2;
+        string = string.slice(2);
+    } else if (/^0[Oo]/.test(string)) {
+        digit = 8;
+        string = string.slice(2);
+    } else if (/^0[Xx]/.test(string)) {
+        digit = 16;
+        string = string.slice(2);
+    }
+
+    while (string[i] != '.' && i < string.length) {
+        number *= digit;
+        number += numberObj[string[i]];
         i++;
+    }
+    if (string[i] == '.') {
+        let fraction = string.slice(i + 1);
+        for (let i = 0; i < fraction.length; i++) {
+            let num = numberObj[fraction[i]];
+            num *= digit ** (-(i + 1));
+            number += num;
+        }
+    }
+    console.log(eString);
+    if (eString.length > 0) {
+        number *= 10 ** convertStringToNumber(eString);
     }
     return number;
 }
 
 
 function isInteger(number) {
-    return number == Math.floor(number)
+    return number - Math.floor(number) < Number.EPSILON;
 }
 
 function getIntegerLength(integer) {
