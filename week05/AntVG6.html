@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Tutorial Demo</title>
+</head>
+
+<body>
+    <div id="mountNode"></div>
+
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.1.0/build/g6.js"></script>
+
+    <script>
+        const data = {
+            nodes: [
+            ],
+            edges: [
+                //   {
+                //     source: 'node1',
+                //     target: 'node2',
+                //   },
+            ],
+        };
+
+        var width = 100;
+        var height = 70;
+
+        let set = new Set();
+        let globalProperties = [
+            "Infinity",
+            "NaN",
+            "undefined",
+            "eval",
+            "isFinite",
+            "isNaN",
+            "parseFloat",
+            "parseInt",
+            "decodeURI",
+            "decodeURIComponent",
+            "encodeURI",
+            "encodeURIComponent",
+            "Array",
+            "ArrayBuffer",
+            "Boolean",
+            "DataView",
+            "Date",
+            "Error",
+            "EvalError",
+            "Float32Array",
+            "Float64Array",
+            "Function",
+            "Int8Array",
+            "Int16Array",
+            "Int32Array",
+            "Map",
+            "Number",
+            "Object",
+            "Promise",
+            "Proxy",
+            "RangeError",
+            "ReferenceError",
+            "RegExp",
+            "Set",
+            "SharedArrayBuffer",
+            "String",
+            "Symbol",
+            "SyntaxError",
+            "TypeError",
+            "Uint8Array",
+            "Uint8ClampedArray",
+            "Uint16Array",
+            "Uint32Array",
+            "URIError",
+            "WeakMap",
+            "WeakSet",
+            "Atomics",
+            "JSON",
+            "Math",
+            "Reflect",
+        ];
+        var queue = [];
+
+        for (var p of globalProperties) {
+            queue.push({
+                path: [p],
+                object: this[p],
+            })
+        }
+
+        while (queue.length) {
+            current = queue.shift();
+            if (set.has(current.object))
+                continue;
+            set.add(current.object);
+            data.nodes.push({
+                id: current.path.join('.'),
+                x: current.path.length * width,
+                y: data.nodes.length * height,
+                label: current.path[current.path.length - 1],
+            })
+            if (current.path.length > 1) {
+                data.edges.push({
+                    source: current.path.slice(0, -1).join('.'),
+                    target: current.path.join(".")
+                })
+            }
+
+            console.log(current);
+            if (!(current.object instanceof Object))
+                continue;
+            for (let p in Object.getOwnPropertyDescriptors(current.object)) {
+                let property = Object.getOwnPropertyDescriptor(current.object, p);
+                if (property.hasOwnProperty("value") && property.value instanceof Object) {
+                    queue.push({
+                        path: current.path.concat([p]),
+                        object: property.value
+                    });
+                }
+                if (property.hasOwnProperty("get")) {
+                    queue.push({
+                        path: current.path.concat([p]),
+                        object: property.get
+                    })
+                }
+                if (property.hasOwnProperty("set")) {
+                    queue.push({
+                        path: current.path.concat([p]),
+                        object: property.set
+                    })
+                }
+            }
+        }
+
+        const graph = new G6.Graph({
+            container: 'mountNode',
+            width: 500,
+            height: 10086,
+        });
+        graph.data(data);
+        graph.render();
+
+        //function addParentHeight(path)
+    </script>
+</body>
+
+</html>
