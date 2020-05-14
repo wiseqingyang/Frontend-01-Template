@@ -3,18 +3,15 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Tutorial Demo</title>
+    <title>G6 show Realm</title>
 </head>
 
 <body>
     <div id="mountNode"></div>
-
     <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.1.0/build/g6.js"></script>
-
     <script>
         const data = {
-            nodes: [
-            ],
+            nodes: [],
             edges: [
                 //   {
                 //     source: 'node1',
@@ -23,7 +20,7 @@
             ],
         };
 
-        var width = 100;
+        var width = 300;
         var height = 70;
 
         let set = new Set();
@@ -79,34 +76,33 @@
             "Math",
             "Reflect",
         ];
-        var queue = [];
-
-        for (var p of globalProperties) {
+        let queue = [];
+        for (let p of globalProperties) {
             queue.push({
                 path: [p],
                 object: this[p],
             })
         }
 
+        let g6DataPaths = {};
+
+        // =======获取所有 realm
         while (queue.length) {
             current = queue.shift();
             if (set.has(current.object))
                 continue;
             set.add(current.object);
-            data.nodes.push({
-                id: current.path.join('.'),
-                x: current.path.length * width,
-                y: data.nodes.length * height,
-                label: current.path[current.path.length - 1],
-            })
-            if (current.path.length > 1) {
-                data.edges.push({
-                    source: current.path.slice(0, -1).join('.'),
-                    target: current.path.join(".")
-                })
+            // antvG6 start
+            let node = g6DataPaths;
+            for (let i = 0; i < current.path.length; i++) {
+                // tostring 和 tolocalstring 本来就存在
+                node[current.path[i]] = (node[current.path[i]] && node[current.path[i]]._name) ? node[current.path[i]] :
+                {
+                    _name: current.path.slice(0, i + 1)
+                };
+                node = node[current.path[i]];
             }
-
-            console.log(current);
+            node = g6DataPaths;
             if (!(current.object instanceof Object))
                 continue;
             for (let p in Object.getOwnPropertyDescriptors(current.object)) {
@@ -131,16 +127,81 @@
                 }
             }
         }
+        // =======获取所有 realm 结束
+        console.log(JSON.stringify(g6DataPaths));
+
+        let ret = getNames(g6DataPaths);
+
+        while (ret.length) {
+            let current = ret.shift();
+            let lastNode = data.nodes[data.nodes.length - 1];
+            let nodeY = height;
+
+            if (lastNode) {
+                let lastNodeDepth = lastNode.id.split(".").length;
+                if (lastNodeDepth > current.length) {
+                    nodeY = lastNode.y + height * (lastNodeDepth - current.length);
+                } else if (lastNodeDepth == current.length) {
+                    nodeY = lastNode.y + height;
+                } else if (lastNodeDepth < current.length) {
+                    nodeY = lastNode.y + height * 0.5;
+                }
+            }
+
+            data.nodes.push({
+                id: current.join('.'),
+                x: current.length * width,
+                y: nodeY,
+                label: current[current.length - 1],
+            });
+
+            if (current.length > 1) {
+                data.edges.push({
+                    source: current.slice(0, -1).join('.'),
+                    target: current.join(".")
+                })
+                addParentY(current);
+            }
+        }
 
         const graph = new G6.Graph({
             container: 'mountNode',
-            width: 500,
-            height: 10086,
+            width: 1000,
+            height: data.nodes[data.nodes.length - 1].y + height,
+            defaultNode: {
+                type: 'rect',
+                size: [60, 30],
+                style: {
+                    lineWidth: 5,
+                    radius: 10,
+                },
+            }
         });
         graph.data(data);
         graph.render();
 
-        //function addParentHeight(path)
+        function getNames(object) {
+            let allNodePaths = [];
+            for (let i in object) {
+                if (i == "_name")
+                    continue;
+                allNodePaths = allNodePaths.concat([object[i]._name]);
+                if (Object.keys(object[i]).length > 0) {
+                    allNodePaths = allNodePaths.concat(getNames(object[i]));
+                }
+            }
+            return allNodePaths;
+        }
+
+        function addParentY(path) {
+            let parentId = path.slice(0, -1).join(".");
+            for (let node of data.nodes) {
+                if (node.id == parentId) {
+                    node.y += height * 0.5;
+                    addParentY(parentId.split("."));
+                }
+            }
+        }
     </script>
 </body>
 
