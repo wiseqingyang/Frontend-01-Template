@@ -1,4 +1,5 @@
 const net = require('net');
+const parser = require("./parser");
 
 class Request {
     //method url = host + port + path
@@ -47,12 +48,9 @@ ${this.bodyText}\r\n`
             }
             connection.on("data", (data) => {
                 parser.receive(data.toString());
-                // resolve(data.toString());
                 if (parser.isFinished) {
                     resolve(parser.response)
                 }
-                // console.log(parser.statusLine);
-                // console.log(parser.headers);
                 connection.end();
             });
             connection.on("error", (err) => {
@@ -84,7 +82,7 @@ class ResponseParser {
         this.headerValue = "";
     }
     receive(string) {
-        for(let i = 0; i < string.length; i++) {
+        for (let i = 0; i < string.length; i++) {
             this.receiveChar(string.charAt(i));
         }
     }
@@ -94,24 +92,24 @@ class ResponseParser {
                 this.currentState = this.WAITING_HEADER_LINE_END;
             } else {
                 this.statusLine += char;
-            }            
-        }else if (this.currentState === this.WAITING_STATUS_LINE_END) {
+            }
+        } else if (this.currentState === this.WAITING_STATUS_LINE_END) {
             if (char === "\n") {
                 this.currentState = this.WAITING_HEADER_NAME;
             }
-        }else if (this.currentState == this.WAITING_HEADER_NAME) {
+        } else if (this.currentState == this.WAITING_HEADER_NAME) {
             if (char === ":") {
                 this.currentState = this.WAITING_HEADER_SPACE;
             } else if (char === "\r") {
                 this.currentState = this.WAITING_HEADER_BLOCK_END;
             } else {
                 this.headerName += char;
-            }            
-        }else if (this.currentState == this.WAITING_HEADER_SPACE) {
+            }
+        } else if (this.currentState == this.WAITING_HEADER_SPACE) {
             if (char === " ") {
                 this.currentState = this.WAITING_HEADER_VALUE;
-            }           
-        }else if (this.currentState == this.WAITING_HEADER_VALUE) {
+            }
+        } else if (this.currentState == this.WAITING_HEADER_VALUE) {
             if (char === "\r") {
                 this.currentState = this.WAITING_HEADER_LINE_END;
                 this.headers[this.headerName] = this.headerValue;
@@ -119,19 +117,19 @@ class ResponseParser {
                 this.headerValue = "";
             } else {
                 this.headerValue += char;
-            }            
-        }else if (this.currentState === this.WAITING_HEADER_LINE_END) {
+            }
+        } else if (this.currentState === this.WAITING_HEADER_LINE_END) {
             if (char === "\n") {
                 this.currentState = this.WAITING_HEADER_NAME;
             }
-        }else if (this.currentState === this.WAITING_HEADER_BLOCK_END) {
+        } else if (this.currentState === this.WAITING_HEADER_BLOCK_END) {
             if (char === '\n') {
                 this.currentState = this.WAITING_BODY;
                 if (this.headers["Transfer-Encoding"] === "chunked") {
                     this.bodyParser = new TrunkBodyParser;
                 }
             }
-        }else if (this.currentState === this.WAITING_BODY) {
+        } else if (this.currentState === this.WAITING_BODY) {
             this.bodyParser.receiveChar(char)
         }
     }
@@ -164,17 +162,17 @@ class TrunkBodyParser {
         this.currentState = this.WAITING_LENGTH;
     }
     receiveChar(char) {
-        //console.log(JSON.stringify(char));
+        // console.log(JSON.stringify(char));
         if (this.currentState === this.WAITING_LENGTH) {
             if (char === '\r') {
                 this.currentState = this.WAITING_LENGTH_LINE_END;
                 if (this.length === 0) {
-                    //console.log(this.content, this.content.length)
+                    // console.log(this.content, this.content.length)
                     this.isFinished = true;
                 }
             } else {
                 this.length *= 16;
-                this.length += char.charCodeAt(0) - '0'.charCodeAt(0);
+                this.length += parseInt(char, 16);
             }
         } else if (this.currentState === this.WAITING_LENGTH_LINE_END) {
             if (char === '\n') {
@@ -198,7 +196,7 @@ class TrunkBodyParser {
     }
 }
 
-void async function() {
+void async function () {
     let request = new Request({
         method: "POST",
         host: "127.0.0.1",
@@ -211,32 +209,8 @@ void async function() {
             name: 'winter'
         }
     })
-    
+
     let ret = await request.send();
     console.log(JSON.stringify(ret));
-    let dom = parser.parserHTML(ret.body);
+    let dom = parser.parseHTML(ret.body);
 }()
-
-
-
-// const client = net.createConnection({
-//     host: "127.0.0.1",
-//     port: 8088
-// }, () => {
-
-//     client.write(request.toString());
-// })
-
-// client.on("data", (data) => {
-//     console.log("===============");
-//     console.log(data.toString());
-//     console.log("===============")
-//     client.end();
-// });
-// client.on("end", () => {
-//     console.log("disconnected from server");
-// });
-
-// client.on("error", err => {
-//     console.log("err", err);
-// })
