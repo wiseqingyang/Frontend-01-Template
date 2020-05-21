@@ -211,6 +211,5 @@ void async function () {
     })
 
     let ret = await request.send();
-    console.log(JSON.stringify(ret));
     let dom = parser.parseHTML(ret.body);
 }()

@@ -25,7 +25,7 @@ const server = http.createServer((req, res) => {
       <img id="myid"/>
       <img />
   </div>
-<body>
+</body>
 </html>`);
   });
 
