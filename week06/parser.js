@@ -1,3 +1,5 @@
+const css = require('css')
+
 const stack = [{
     element: 'document',
     children: []
@@ -8,6 +10,13 @@ let currentAttr = null;
 let currentTextNode = null;
 
 const EOF = Symbol("EOF");
+
+let rules = [];
+function addCSSRules(text) {
+    let ast = css.parse(text);
+    console.log(JSON.stringify(ast, null, "  "));
+    rules.push(ast)
+}
 
 function emitToken(token) {
     let top = stack[stack.length - 1];
@@ -39,7 +48,10 @@ function emitToken(token) {
     } else if (token.type === "endTag") {
         if (token.tagName !== top.tagName) {
             throw `not closing tag ${top.tagName} current ${token.tagName}`;
-        } else {
+        } else {      
+            if (token.tagName === 'style') {
+                addCSSRules(top.children[top.children.length - 1].content); //TODO??
+            }
             stack.pop()
         }
         currentTextNode = null;
@@ -249,6 +261,6 @@ module.exports.parseHTML = function parseHTML(html) {
         state = state(c);
     }
     state = state(EOF);
-    console.log(JSON.stringify(stack[0]));
+    //console.log(JSON.stringify(stack[0]));
     return stack[0];
 }
