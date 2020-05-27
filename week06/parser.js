@@ -14,8 +14,105 @@ const EOF = Symbol("EOF");
 let rules = [];
 function addCSSRules(text) {
     let ast = css.parse(text);
-    console.log(JSON.stringify(ast, null, "  "));
-    rules.push(ast)
+    rules.push(...ast.stylesheet.rules)
+}
+
+function matchClass(classAttr, className) {
+    let classes = [];
+    classAttr.forEach(classAtt => {
+        classes = classes.concat(classAtt.split(' '));
+    });
+    for (cl of classes) {
+        if (cl === className) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function match(element, selectorPart) {
+    if (!element || !element.attrs)
+        return false;
+
+    if (selectorPart.charAt(0) === '#') {
+        let att = element.attrs.filter(attr => attr.name === 'id');
+        if (att.length > 0) {
+            return att[0].value === selectorPart.replace('#', '');
+        }
+    } else if (selectorPart.charAt(0) === '#') {
+        let classAttr = element.attrs.filter(attr => attr.name === 'class');
+        if (classAttr.length > 0) {
+            return matchClass(classAttr, selectorPart.replace('.', ' '));
+        }
+    } else {
+        return element.tagName === selectorPart;
+    }
+}
+
+function computeCSS(element) {
+    let elements = stack.slice().reverse();
+    if (!element.computedStyle) {
+        element.computedStyle = {};
+    }
+    for (let rule of rules) {
+        let selectorParts = rule.selectors[0].split(' ').reverse();
+
+        if (!match(element, selectorParts.shift())) {
+            continue;
+        }
+
+        let isMatch = false;
+        let j = 0;
+        for (let i = 0; i < elements.length; i++) {
+            if (match(elements[i], selectorParts[j])) {
+                j++;
+            }
+            if (j >= selectorParts.length) {
+                isMatch = true;
+                break;
+            }
+        }
+        if (isMatch) {
+            console.log(element, "match rule ", rule);
+            let p = specificity(rule.selectors[0]);
+            for (let de of rule.declarations) {
+                if (!element.computedStyle[de.property]) {
+                    element.computedStyle[de.property] = {};
+                }
+                if (!element.computedStyle[de.property].specificity) {
+                    element.computedStyle[de.property].specificity = p;
+                    element.computedStyle[de.property].value = de.value;
+                } else if (compareSp(element.computedStyle[de.property].specificity, p) < 0) {
+                    for (let k = 0; k < p.length; k++)
+                        element.computedStyle[de.property].specificity[k] += p[k];
+                }
+            }
+
+        }
+    }
+}
+
+function compareSp(sp1, sp2) {
+    for (let i = 0; i < sp1.length; i++) {
+        if (sp1[i] - sp2[i])
+            return sp1[i] - sp2[i];
+    }
+    return 0;
+}
+
+function specificity(selector) {
+    const p = [0, 0, 0, 0];
+    let selectorParts = selector.split(" ");
+    for (let part of selectorParts) {
+        if (part.charAt(0) === '#') {
+            p[1] += 1;
+        } else if (part.charAt(0) === '.') {
+            p[2] += 1;
+        } else {
+            p[3] += 1;
+        }
+    }
+    return p;
 }
 
 function emitToken(token) {
@@ -37,6 +134,8 @@ function emitToken(token) {
             }
         }
 
+        computeCSS(element);
+
         top.children.push(element);
         // element.parent = top;
 
@@ -48,11 +147,11 @@ function emitToken(token) {
     } else if (token.type === "endTag") {
         if (token.tagName !== top.tagName) {
             throw `not closing tag ${top.tagName} current ${token.tagName}`;
-        } else {      
+        } else {
             if (token.tagName === 'style') {
                 addCSSRules(top.children[top.children.length - 1].content); //TODO??
             }
-            stack.pop()
+            stack.pop();
         }
         currentTextNode = null;
     } else if (token.type === 'text') {
