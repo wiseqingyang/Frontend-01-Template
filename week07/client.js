@@ -1,5 +1,6 @@
 const net = require('net');
 const parser = require("./parser");
+const images = require('images');
 
 class Request {
     //method url = host + port + path
@@ -196,6 +197,8 @@ class TrunkBodyParser {
     }
 }
 
+const render = require('./render');
+
 void async function () {
     let request = new Request({
         method: "POST",
@@ -212,4 +215,9 @@ void async function () {
 
     let ret = await request.send();
     let dom = parser.parseHTML(ret.body);
+    console.log(JSON.stringify(dom));
+    let viewport = images(800, 600);
+
+    render(viewport, dom.children[0].children[1].children[0]);
+    viewport.save('viewport.jpg');
 }()

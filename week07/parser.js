@@ -21,7 +21,7 @@ function addCSSRules(text) {
 function matchClass(classAttr, className) {
     let classes = [];
     classAttr.forEach(classAtt => {
-        classes = classes.concat(classAtt.split(' '));
+        classes = classes.concat(classAtt.value.split(' '));
     });
     for (cl of classes) {
         if (cl === className) {
@@ -40,10 +40,10 @@ function match(element, selectorPart) {
         if (att.length > 0) {
             return att[0].value === selectorPart.replace('#', '');
         }
-    } else if (selectorPart.charAt(0) === '#') {
+    } else if (selectorPart.charAt(0) === '.') {
         let classAttr = element.attrs.filter(attr => attr.name === 'class');
         if (classAttr.length > 0) {
-            return matchClass(classAttr, selectorPart.replace('.', ' '));
+            return matchClass(classAttr, selectorPart.replace('.', ''));
         }
     } else {
         return element.tagName === selectorPart;
@@ -58,21 +58,25 @@ function computeCSS(element) {
     for (let rule of rules) {
         let selectorParts = rule.selectors[0].split(' ').reverse();
 
-        if (!match(element, selectorParts.shift())) {
+        if (!match(element, selectorParts[0])) {
             continue;
         }
-
         let isMatch = false;
-        let j = 0;
-        for (let i = 0; i < elements.length; i++) {
-            if (match(elements[i], selectorParts[j])) {
-                j++;
-            }
-            if (j >= selectorParts.length) {
-                isMatch = true;
-                break;
+        if (selectorParts.length == 1) {
+            isMatch = true;
+        } else {
+            let j = 1;
+            for (let i = 0; i < elements.length; i++) {
+                if (match(elements[i], selectorParts[j])) {
+                    j++;
+                }
+                if (j >= selectorParts.length) {
+                    isMatch = true;
+                    break;
+                }
             }
         }
+
         if (isMatch) {
             console.log(element, "match rule ", rule);
             let p = specificity(rule.selectors[0]);
@@ -142,6 +146,8 @@ function emitToken(token) {
 
         if (!token.isSelfClosing) {
             stack.push(element);
+        } else {
+            layout(element);
         }
         currentTextNode = null;
 
@@ -157,6 +163,9 @@ function emitToken(token) {
         layout(top);
         currentTextNode = null;
     } else if (token.type === 'text') {
+        if (!currentTextNode && token.content.match(/^[\t\n\f ]$/)) {
+            return;
+        }
         if (!currentTextNode) {
             currentTextNode = {
                 type: 'text',

@@ -12,18 +12,24 @@ const server = http.createServer((req, res) => {
     <style>
     body div #myid{
       width:100px;
-      background-color: #ff5000;
+      height: 100px;
+      background-color: rgb(255,100,100);
     }
-    body div img{
-      width: 300px;
-      background-color: #ff1111;
+    body div{
+      display: flex;
+      background-color: rgb(20,100,100);
+    }
+    .like {
+      width: 100px;
+      height: 200px;
+      background-color: rgb(20,140,100);
     }
     </style>
 </head>
 <body>
   <div>
-      <img id="myid"/>
-      <img />
+      <div id="myid"/>
+      <div class="like"/>
   </div>
 </body>
 </html>`);
