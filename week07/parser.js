@@ -244,6 +244,8 @@ function beforeAttrName(c) {
         return beforeAttrName;
     else if (c === '>') {
         currentToken[currentAttr.name] = currentAttr.value;
+        emitToken(currentToken);
+        currentToken = null;
         return data;
     }
     else if (c === "/")
