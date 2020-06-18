@@ -1,0 +1,141 @@
+
+<style>
+    .board {
+        width: 350px;
+    }
+    .item {
+        width: 100px;
+        height: 100px;
+        display: inline-block;
+        color: red;
+        font-size: 40px;
+        background-color: green;
+        line-height: 100px;
+        text-align: center;
+        border: 1px solid white;
+        vertical-align: top;
+    }
+</style>
+
+<div class="board"></div>
+
+<script>
+    let pattern = [
+        [2, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+    ];
+    let role = 1;
+
+    console.log(pattern);
+
+    function show() {
+        let div = document.getElementsByClassName('board')[0];
+        div.innerHTML = '';
+
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                let block = document.createElement('div');
+                block.innerHTML = pattern[i][j] == 2 ? '❌' : pattern[i][j] == 1 ? '⭕️' : '';
+                block.classList.add('item');
+                block.addEventListener('click', () => move(i, j));
+                div.appendChild(block)
+            }
+        }
+        document.body.appendChild(div);
+
+    }
+    
+
+    function move(x, y) {
+        console.log(x, y);
+        if (pattern[x][y] !== 0)
+            return;
+        pattern[x][y] = role;
+
+        if (check(pattern, role))
+            alert(`${role == 1 ? "⭕️" : "❌"} wins!`)
+        role = 3- role;
+        show();
+
+        if (willWin(pattern, role))
+            console.log(`${role == 1 ? "⭕️" : "❌"} will win!`)
+    }
+
+    function check(pattern, role) {
+        
+        for (let i = 0; i < 3; i++) {
+            let isWin = true;
+            for (let j = 0; j < 3; j++) {
+                if (pattern[i][j] != role) {
+                    isWin = false;
+                    break;
+                }
+            }
+            if (isWin)
+                return true;
+        }
+
+        for (let i = 0; i < 3; i++) {
+            let isWin = true;
+            for (let j = 0; j < 3; j++) {
+                if (pattern[j][i] != role) {
+                    isWin = false;
+                    break;
+                }
+            }
+            if (isWin)
+                return true;
+        }
+
+        {
+            let isWin = true;
+            for (let j = 0; j < 3; j++) {
+                if (pattern[j][j] != role) {
+                    isWin = false;
+                    break;
+                }
+            }
+            if (isWin)
+                return true;
+        }
+
+        {
+            let isWin = true;
+            for (let j = 0; j < 3; j++) {
+                if (pattern[j][2 - j] != role) {
+                    isWin = false;
+                    break;
+                }
+            }
+            if (isWin)
+                return true;
+        }
+        return false;        
+    }
+
+    function clone(pattern) {
+        return JSON.parse(JSON.stringify(pattern));
+    }
+
+    function willWin(pattern, role) {
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                let tmp = clone(pattern);
+                if (tmp[i][j] != 0)
+                    continue;
+                
+                tmp[i][j] = role;
+                if (check(tmp, role))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    window.onload = function() {
+        show();
+    }
+    
+</script>
