@@ -14,15 +14,37 @@
     }
 </style>
 <div id="container"></div>
+<button onclick="localStorage.map = JSON.stringify(map)">save</button>
 <script>
-    let map = new Array(10000).fill(0);
+    let map = localStorage.map ? JSON.parse(localStorage.map) : new Array(10000).fill(0);
 
     let container = document.getElementById('container');
     for (let i = 0; i < 100; i++) {
         for (let j = 0; j < 100; j++) {
             let cell = document.createElement('div');
             cell.classList.add('cell');
+            cell.style.backgroundColor = map[i * 100 + j] ? 'black' : 'gray';
             container.appendChild(cell);
+            cell.addEventListener('mousemove', e => {
+                if (mouse) {
+                    cell.style.backgroundColor = e.which === 3 ? 'gray' : 'black';
+                    map[i * 100 + j] = e.which === 3 ? 0 : 1;
+                }
+            });
         }
     }
+
+    let mouse = false;
+    let clear = false;
+    document.addEventListener('mousedown', (e) => {
+        mouse = true;
+        clear = e.which === 3;
+    });
+    document.addEventListener('mouseup', (e) => {
+        mouse = false;
+        if (e.which === 3) {
+            clear = false;
+        }
+    });
+    document.addEventListener('contextmenu', e => e.preventDefault());
 </script>

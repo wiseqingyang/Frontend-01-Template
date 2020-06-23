@@ -1,0 +1,50 @@
+<style>
+    .light {
+        width: 100px;
+        height: 100px;
+        border-radius: 100px;
+        margin: 5px;
+        background-color: gray;
+        display: inline-block;
+    }
+</style>
+<div>
+    <div class="light" id="green"></div>
+    <div class="light" id="red"></div>
+    <div class="light" id="yellow"></div>
+</div>
+
+<script>
+    var red = document.getElementById('red');
+    var yellow = document.getElementById('yellow');
+    var green = document.getElementById('green');
+
+    green.style.backgroundColor = 'green';
+
+    run()
+
+    async function run() {
+        while (true) {
+            await sleep(10000);
+            lightEle(yellow, 'yellow');
+            await sleep(2000);
+            lightEle(red, 'red');
+            await sleep(5000);
+            lightEle(green, 'green')
+        }
+    }
+
+    function lightEle(light, color) {
+        red.style.backgroundColor = 'gray';
+        yellow.style.backgroundColor = 'gray';
+        green.style.backgroundColor = 'gray';
+
+        light.style.backgroundColor = color;
+    }
+
+   async function sleep(milliseconds) {
+    return new Promise(function(resolve, reject) {
+        setTimeout(() => resolve(), milliseconds);
+    })
+   }
+</script>
