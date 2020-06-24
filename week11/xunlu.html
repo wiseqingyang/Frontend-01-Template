@@ -47,4 +47,158 @@
         }
     });
     document.addEventListener('contextmenu', e => e.preventDefault());
+
+
+    function sleep(mill) {
+        return new Promise((resolve, reject) => setTimeout(resolve, mill));
+    }
+
+    class Sorted {
+        constructor(data, compare) {
+            this.data = data;
+            this.compare = compare;
+        }
+
+        take() {
+            let data = this.data;
+            if (!data.length)
+                return;
+
+            let min = data[0];
+            let minIndex = 0;
+            for (let i = 1; i < data.length; i++) {
+                if (this.compare(data[i], min) < 0) {
+                    min = data[i];
+                    minIndex = i;
+                }
+            }
+            data[minIndex] = data[data.length - 1];
+            data.pop();
+            return min;
+        }
+
+        insert(value) {
+            this.data.push(value)
+        }
+        get length() {
+            return this.data.length;
+        }
+    }
+
+    class BinaryHeap {
+        constructor(data, compare) {
+            this.data = data;
+            this.compare = compare;
+        }
+
+        take() {
+            let data = this.data;
+            if (!data.length)
+                return;
+
+            let min = data[0];
+            let minIndex = 0;
+            let i = 0;
+            while (i < data.length) {
+                if (i * 2 + 1 >= data.length) {
+                    break;
+                }
+                if (i * 2 + 2 >= data.length) {
+                    data[i] = data[i * 2 + 1];
+                    i = i * 2 + 1;
+                    break;
+                }
+                console.log(data[i * 2 + 1], data[i * 2 + 2])
+                if (this.compare(data[i * 2 + 1], data[i * 2 + 2]) < 0) {
+                    data[i] = data[i * 2 + 1];
+                    i = i * 2 + 1;
+                } else {
+                    data[i] = data[i * 2 + 2];
+                    i = i * 2 + 2;
+                }
+            }
+            if (i < data.length - 1) {
+                this.insertAt(i, data[data.length - 1]);
+            }
+            data.pop();
+            return min;
+        }
+
+        insertAt(i, v) {
+            this.data[i] = v;
+            while (i >= 0) {
+                let parentIndex = Math.floor((i - 1) / 2);
+                if (this.compare(this.data[i], this.data[parentIndex]) < 0) {
+                    console.log(this.data[i], this.data[parentIndex]);
+                    this.data[i] = this.data[parentIndex];
+                    this.data[parentIndex] = v;
+                    i = parentIndex;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        insert(value) {
+            this.insertAt(this.data.length, value);
+        }
+        get length() {
+            return this.data.length;
+        }
+    }
+    let b = new BinaryHeap([], (a , b) => a -b);
+    b.insert(8);
+    b.insert(99);
+    b.insert(88);
+    b.insert(4);
+    b.insert(0);
+    b.insert(2);
+    async function path(map, start, end) {
+
+        function distance([x, y]) {
+            return (x - end[0]) ** 2 + (y - end[1]) ** 2;
+        }
+
+        map = map.slice();
+        let collection = new Sorted([start], (a, b) => distance(a) - distance(b));
+
+        container.children[start[1] * 100 + start[0]].style.backgroundColor = 'yellow';
+        container.children[end[1] * 100 + end[0]].style.backgroundColor = 'red';
+
+        async function insert(x, y, pre) {
+            map = map.slice();
+            if (map[y * 100 + x] !== 0)
+                return;
+            if (x < 0 || y < 0 || x >= 100 || y >= 100)
+                return;
+            map[y * 100 + x] = pre;
+            container.children[y * 100 + x].style.backgroundColor = 'lightgreen';
+            await sleep(3)
+            collection.insert([x, y]);
+        }
+
+        while (collection.length) {
+            let [x, y] = collection.take();
+            if (end[0] == x && end[1] == y) {
+                let path = [];
+                while (x !== start[0] || y !== start[1]) {
+                    path.push([x, y]);
+                    container.children[y * 100 + x].style.backgroundColor = 'pink';
+                    await sleep(3);
+                    [x, y] = map[y * 100 + x];
+                }
+                return path;
+            }
+            await insert(x - 1, y, [x, y]);
+            await insert(x + 1, y, [x, y]);
+            await insert(x, y - 1, [x, y]);
+            await insert(x, y + 1, [x, y]);
+
+            await insert(x - 1, y - 1, [x, y]);
+            await insert(x + 1, y + 1, [x, y]);
+            await insert(x - 1, y + 1, [x, y]);
+            await insert(x + 1, y - 1, [x, y]);
+        }
+        return null;
+    }
 </script>
