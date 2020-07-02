@@ -1,0 +1,129 @@
+<script>
+    // let source = `1 +~ 2 * 3 + 4 / 5`;
+    let regex = /([0-9]+)|([ ]+)|([\r\n]+)|(\+)|(\-)|(\*)|(\/)/g;
+    let dictionary = ["Number", "Whitespace", "LineTerminator", "+", "-", "*", "/"];
+
+
+    function* tokenize(source) {
+        let result = null;
+        let lastIndex = 0;
+        do {
+            lastIndex = regex.lastIndex;
+            result = regex.exec(source);
+            if (!result) break;
+            if (regex.lastIndex - lastIndex !== result[0].length) {
+                let str = source.slice(lastIndex, regex.lastIndex - result[0].length)
+                throw `unexpected token ${str}`;
+            }
+
+            let token = {
+                type: null,
+                value: null
+            };
+
+            for (let i = 1; i <= dictionary.length; i++) {
+                if (result[i]) {
+                    token.value = result[i];
+                    token.type = dictionary[i - 1];
+                }
+            }
+            if (token.type != 'Whitespace')
+                yield token;
+        } while (result)
+        yield { type: 'EOF' };
+    }
+
+    function Expression(source) {
+        if (source[0].type === 'AddtiveExpression' && source[1].type === 'EOF') {
+            let node = {
+                type: 'Expression',
+                children: [source.shift(), source.shift()],
+            }
+            source.unshift(node);
+            return node;
+        }
+        AddtiveExpression(source);
+        return Expression(source);
+    }
+
+    function AddtiveExpression(source) {
+        if (source[0].type === 'Number') {
+            MultiplicativeExpression(source);
+        }
+        if (source[0].type === 'MultiplicativeExpression') {
+            let node = {
+                type: 'AddtiveExpression',
+                children: source.shift(),
+            }
+            source.unshift(node);
+            return AddtiveExpression(source);
+        }
+        if (source[0].type === 'AddtiveExpression' 
+        && source.length > 1 
+        && source[1].type === '+') {
+            let node = {
+                type: 'AddtiveExpression',
+                children: [source.shift(), source.shift()],
+            };
+            MultiplicativeExpression(source);
+            node.children.push(source.shift());
+            source.unshift(node);
+            return AddtiveExpression(source);
+        }
+        if (source[0].type === 'AddtiveExpression' 
+        && source.length > 1 
+        && source[1].type === '-') {
+            let node = {
+                type: 'AddtiveExpression',
+                children: [source.shift(), source.shift()],
+            };
+            MultiplicativeExpression(source);
+            node.children.push(source.shift());
+            source.unshift(node);
+            return AddtiveExpression(source);
+        }
+        if (source[0].type === 'AddtiveExpression') {
+            return source[0];
+        }
+    }
+
+    function MultiplicativeExpression(source) {
+        if (source[0].type === 'Number') {
+            let node = {
+                type: 'MultiplicativeExpression',
+                children: source.shift(),
+            }
+            source.unshift(node);
+            return MultiplicativeExpression(source);
+        }
+        if (source[0].type === 'MultiplicativeExpression' 
+        && source.length > 1 
+        && source[1].type === '*') {
+            let node = {
+                type: 'MultiplicativeExpression',
+                children: [source.shift(), source.shift(), source.shift()],
+            }
+            source.unshift(node);
+            return MultiplicativeExpression(source);
+        }
+        if (source[0].type === 'MultiplicativeExpression' 
+        && source.length > 1 
+        && source[1].type === '/') {
+            let node = {
+                type: 'MultiplicativeExpression',
+                children: [source.shift(), source.shift(), source.shift()],
+            }
+            source.unshift(node);
+            return MultiplicativeExpression(source);
+        }
+        if (source[0].type === 'MultiplicativeExpression') {
+            return source[0];
+        }
+    }
+
+    const source = [];
+    for (let i of tokenize(`1 * 2 * 3 + 4 / 5`)) {
+        source.push(i);
+    }
+    console.log(Expression(source));
+</script>

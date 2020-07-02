@@ -1,0 +1,47 @@
+<script>
+    class Trie {
+        constructor() {
+            this.root = Object.create(null);
+        }
+
+        insert(word) {
+            let node = this.root;
+            for (let c of word) {
+                if (!node[c])
+                    node[c] = Object.create(null);
+                node = node[c];
+            }
+            if (!node['$'])
+                node['$'] = 0;
+            node['$']++;
+        }
+
+        most() {
+            let most = 0;
+            let word = '';
+            let visit = (node) => {
+                if (node['$'] && node['$'] > most) {
+                    most = node['$'];
+                }
+            }
+
+            let node = this.root;
+            for (let key in node) {
+
+            }
+        }
+    }
+
+    function randomWord(length) {
+        let key = '';
+        while(length--) {
+            key += String.fromCharCode(Math.random() * 26 + 'a'.charCodeAt(0));
+        }
+        return key;
+    }
+
+    let trie = new Trie;
+    for (let i = 0; i < 100000; i++) {
+        trie.insert(randomWord(length));
+    }
+</script>
