@@ -18,23 +18,28 @@
 
         most() {
             let most = 0;
-            let word = '';
-            let visit = (node) => {
-                if (node['$'] && node['$'] > most) {
-                    most = node['$'];
+            let maxWord = '';
+            let visit = (node, word) => {
+                for (let i in node) {
+                    if (i === '$') {
+                        if (node['$'] > most) {
+                            maxWord = word;
+                            most = node['$'];
+                        }
+                    } else {
+                        visit(node[i], word + i);
+                    }
                 }
             }
 
-            let node = this.root;
-            for (let key in node) {
-
-            }
+            visit(this.root, '');
+            return maxWord;
         }
     }
 
     function randomWord(length) {
         let key = '';
-        while(length--) {
+        while (length--) {
             key += String.fromCharCode(Math.random() * 26 + 'a'.charCodeAt(0));
         }
         return key;
@@ -42,6 +47,6 @@
 
     let trie = new Trie;
     for (let i = 0; i < 100000; i++) {
-        trie.insert(randomWord(length));
+        trie.insert(randomWord(4));
     }
 </script>
