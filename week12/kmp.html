@@ -1,0 +1,40 @@
+<script>
+    function find(source, pattern) {
+
+        let table = new Array(pattern.length).fill(0);
+        let k = 0;
+        for (let j = 1; j < pattern.length; j++) {
+            if (pattern[j] === pattern[k]) {
+                k++;
+                table[j] = k;
+            }  else 
+                k = 0;  
+        }
+        console.log(table);
+
+        let j = 0;
+        for (let i = 0; i < source.length; i++) {
+            if (source[i] === pattern[j]) {
+                j++;  
+            } else {
+                j = table[j - 1];
+                if (source[i] == source[j]) 
+                    j++;
+                else 
+                    j = 0;
+            }
+            if (j === pattern.length)
+                return true;
+        }
+        return false;
+    }
+
+    console.log(find('abcdef', 'abf'));
+    console.log(find('abcdef', 'def'));
+    console.log(find('aabcdef', 'abc'));
+    console.log(find('abcabcabxx', 'abcabx'));
+    console.log(find('abcababcabx', 'abcabx'));
+    console.log(find('abcabcabcabdab', 'abcabcabd'));
+    console.log(find('abcabdabeabx', 'abeabx'));
+    console.log(find('abababcababx', 'abababcababx'));
+</script>
