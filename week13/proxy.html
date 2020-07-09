@@ -2,6 +2,8 @@
 <input id="g" type="range" min="0" max="255" />
 <input id="b" type="range" min="0" max="255" />
 <div id="sample" style="width: 50px; height: 50px;"></div>
+<div id="hello">hello {{world}}!</div>
+
 
 <script>
     let object = {
@@ -14,7 +16,7 @@
     let reactivities = new Map();
 
     function reactive(object) {
-        if (reactivities.has(object)) 
+        if (reactivities.has(object))
             return reactivities.get(object);
         let reactivity = new Proxy(object, {
             get(obj, name) {
@@ -53,16 +55,35 @@
     }
 
     let r;
-    let proxy = reactive({ r: 100, g: 255, b: 255 });
+    let proxy = reactive({
+        r: 100,
+        g: 255,
+        b: 255
+    });
     effect(() => {
         document.getElementById('r').value = proxy.r;
         document.getElementById('g').value = proxy.g;
         document.getElementById('b').value = proxy.b;
         document.getElementById('sample').style.backgroundColor = `rgb(${proxy.r}, ${proxy.g}, ${proxy.b})`;
     });
-    
+
     document.getElementById('r').addEventListener('input', e => proxy.r = e.target.value);
     document.getElementById('g').addEventListener('input', e => proxy.g = e.target.value);
     document.getElementById('b').addEventListener('input', e => proxy.b = e.target.value);
 
+    let range = document.createRange();
+    range.setStart(hello.childNodes[0], 6);
+    range.setEnd(hello.childNodes[0], 15);
+    let data = reactive({
+        content: 'nihao',
+    });
+
+    window.onload = () => {
+        let hello = document.getElementById('hello');
+
+        effect(() => {
+            range.extractContents();
+            range.insertNode(document.createTextNode(data.content));
+        })
+    }
 </script>
