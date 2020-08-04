@@ -10,21 +10,26 @@ class Carousel {
         this[name] = value;
     }
 
-    render() {
+    handlerMove() {
+        
+    }
 
+    render() {
         let children = this.data.map(url => {
             let ele = <img src={url} />;
             ele.addEventListener('dragstart', e => e.preventDefault());
             return ele;
         });
+
+        let root = <div class="carousel">
+                    {children}
+                </div>
         
 
         let position = 0;
         let move = () => {
             let current = children[position];
-
             let nextPos = (position + 1) % this.data.length;
-
             let next = children[nextPos];
 
             next.style.transition = 'ease 0s';
@@ -42,12 +47,63 @@ class Carousel {
 
             setTimeout(move, 3000);
         }
+        // setTimeout(move, 3000);
 
-        setTimeout(move, 3000);
+        root.addEventListener('mousedown', event => {
+            console.log(event)
+            let originX = event.clientX;
+
+            let lastPosition = (position + 1) % this.data.length;
+            let nextPosition = (position - 1 + this.data.length) % this.data.length;
+            let current = children[position];
+            let last = children[lastPosition];
+            let next = children[nextPosition];
+
+            last.style.transition = 'ease 0s';
+            next.style.transition = 'ease 0s';
+            current.style.transition = 'ease 0s';
+
+            last.style.transform = `translateX(${-500 - 500 * lastPosition}px)`;
+            current.style.transform = `translateX(${- 500 * position}px)`;
+            next.style.transform = `translateX(${500 - 500 * nextPosition}px)`;
+
+            const move = (event) => {
+                let newX = event.clientX;
+                let offsetX = newX - originX;
+                
+                last.style.transform = `translateX(${offsetX - 500 - 500 * lastPosition}px)`;
+                current.style.transform = `translateX(${offsetX - 500 * position}px)`;
+                next.style.transform = `translateX(${500 + offsetX - 500 * nextPosition}px)`;
+            }
+            const up = e => {
+                let offset = 0;
+                if (e.clientX - originX > 100) {
+                    offset = 1;
+                } else if (e.clientX - originX < -100) {
+                    offset = -1
+                }
+                
+                let transfrom = `transform ${0.5 * (500 - Math.abs(e.clientX - originX)) / 500}s`
+                last.style.transition = transfrom;
+                next.style.transition = transfrom;
+                current.style.transition = transfrom;
+
+                last.style.transform = `translateX(${offset * 500 - 500 - 500 * lastPosition}px)`;
+                current.style.transform = `translateX(${offset* 500 - 500 * position}px)`;
+                next.style.transform = `translateX(${500 + offset * 500 - 500 * nextPosition}px)`;
+
+                position = (position + offset + this.data.length) % this.data.length;
+                
+
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup', up);
+            }
+
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup', up);
+        })
         return (
-            <div class="carousel">
-                {children}
-            </div>
+            root
         )
     }
 
