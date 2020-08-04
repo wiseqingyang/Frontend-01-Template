@@ -1,122 +1,68 @@
-function create(Cls, attribute, ...children) {
-    var cls;
-    if (typeof Cls == 'string') {
-        cls = new Wrapper(Cls);
-    } else {
-        cls = new Cls();
-    }
+import { create } from './createElement.js';
 
-    for (var a in attribute) {
-        // cls[a] = attribute[a];
-        cls.setAttribute(a, attribute[a]);
-    }
-
-    for (let child of children) {
-        if (typeof child == 'string') {
-            child = new TextNode (child);
-        }
-        cls.appendChild(child);
-    }
-    return cls;
-}
-
-class TextNode {
-    constructor(text) {
-        this.root = document.createTextNode(text);
-    }
-
-    mountTo(node) {
-        node.appendChild(this.root);
-    }
-}
-
-class Cls {
+class Carousel {
     constructor(config) {
         this.config = config;
         this.root = document.createElement('div');
         this.children = [];
     }
-
-    // property
-    set id(v) {
-        console.log("set::id", v);
-    }
-
-    // attribute
-    setAttribute(key, value) {
-        this.root.setAttribute(key, value);
-    }
-
-    // children
-    appendChild(child) {
-        console.log(child);
-        this.children.push(child);
+    setAttribute(name, value) {
+        this[name] = value;
     }
 
     render() {
+
+        let children = this.data.map(url => {
+            let ele = <img src={url} />;
+            ele.addEventListener('dragstart', e => e.preventDefault());
+            return ele;
+        });
+        
+
+        let position = 0;
+        let move = () => {
+            let current = children[position];
+
+            let nextPos = (position + 1) % this.data.length;
+
+            let next = children[nextPos];
+
+            next.style.transition = 'ease 0s';
+            current.style.transition = 'ease 0s';
+            current.style.transform = `translateX(${- 100 * position}%)`;
+            next.style.transform = `translateX(${100 - 100 * nextPos}%)`
+
+            setTimeout(() => {
+                next.style.transition = 'transform 0.5s';
+                current.style.transition = 'transform 0.5s';
+                current.style.transform = `translateX(${-100 - 100 * position}%)`;
+                next.style.transform = `translateX(${- 100 * nextPos}%)`
+                position = nextPos;
+            }, 16);
+
+            setTimeout(move, 3000);
+        }
+
+        setTimeout(move, 3000);
         return (
-            <article>
-                <header> i am header</header>
-                {this.slot}
-                <footer>i am footter </footer>
-            </article>
+            <div class="carousel">
+                {children}
+            </div>
         )
     }
 
     mountTo(node) {
-        this.slot = <div></div>
         this.render().mountTo(node);
-        for (let child of this.children) {
-            this.slot.appendChild(child);
-        }
     }
 }
 
-class Wrapper {
-    constructor(type) {
-        this.root = document.createElement(type);
-        this.children = [];
-    }
+var data = [
+    'https://static001.geekbang.org/resource/image/bb/21/bb38fb7c1073eaee1755f81131f11d21.jpg',
+    'https://static001.geekbang.org/resource/image/1b/21/1b809d9a2bdf3ecc481322d7c9223c21.jpg',
+    'https://static001.geekbang.org/resource/image/b6/4f/b6d65b2f12646a9fd6b8cb2b020d754f.jpg',
+    'https://static001.geekbang.org/resource/image/73/e4/730ea9c393def7975deceb48b3eb6fe4.jpg',
+];
 
-    // property
-    set id(v) {
-        console.log("set::id", v);
-    }
+var component = <Carousel data={data}></Carousel>
 
-    // attribute
-    setAttribute(key, value) {
-        this.root.setAttribute(key, value);
-    }
-
-    // children
-    appendChild(child) {
-        console.log(child);
-        this.children.push(child);
-    }
-
-    render() {
-        return (
-            <article>
-                <header> i am header</header>
-                {this.slot}
-                <footer>i am footter </footer>
-            </article>
-        )
-    }
-
-    mountTo(node) {
-        this.slot = <div></div>
-        this.render().mountTo(node)
-        for (let child of this.children) {
-            this.slot.appendChild(child);
-        }
-    }
-}
-
-var component = <Cls id="a" style="width:100px;height:100px;background-color:red;">
-    <Cls />
-        <Cls />
-        </ Cls>;
 component.mountTo(document.body);
-console.log(component);
-// component.setAttribute('id', 'b');
