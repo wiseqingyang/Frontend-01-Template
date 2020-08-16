@@ -1,0 +1,51 @@
+<style>
+    #ele {
+        width: 100px;
+        height: 100px;
+        background: #7a8a9a;
+        transform: translateX(0)
+    }
+    #ele1 {
+        width: 100px;
+        height: 100px;
+        background: #9a8a7a;
+        /* transition: transform ease 5s; */
+        transform: translateX(0)
+
+    }
+</style>
+<div id="ele"></div>
+<div id="ele1"></div>
+<button>pause</button>
+<button>resume</button>
+<button>restart</button>
+<button>animate ele1</button>
+
+<script type="module" >
+    import {TimeLine, Animation, ColorAnimation} from "./animation.js"
+    import { cubicBezier } from "./cubicBezier.js"
+    let ele = document.getElementById('ele');
+    let ele1 = document.getElementById('ele1');
+    
+    // ele.style.transition = 'ease 5s';
+    const linear = t => t;
+    const ease = cubicBezier(.25,.1,.25,1)
+    const timeLine = new TimeLine;
+    timeLine.add(new ColorAnimation(ele.style, 'backgroundColor', {r: 0x9a, g: 0x8a, b: 0x7a, a: 1},  
+    {r: 0x7a, g: 0x8a, b:0x9a, a:1}, 5000, 0, ease));
+    timeLine.start();
+    // ele1.style.transform ='translateX(200px)'
+
+    document.getElementsByTagName('button')[0].onclick = function () {
+        timeLine.pause();
+    }
+    document.getElementsByTagName('button')[1].onclick = function () {
+        timeLine.resume();
+    }
+    document.getElementsByTagName('button')[2].onclick = function () {
+        timeLine.restart();
+    }
+    document.getElementsByTagName('button')[3].onclick = function () {
+        timeLine.add(new Animation(ele1.style, e => `translateX(${e}px)`, 'transform', 0, 200, 5000, 0, ease), 0);
+    }
+</script>
